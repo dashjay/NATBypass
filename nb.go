@@ -11,6 +11,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"golang.org/x/net/proxy"
 )
 
 const timeout = 5
@@ -43,6 +45,20 @@ func main() {
 		log.Println("[√]", "open test log file success. path:", logPath)
 	}*/
 
+	nbProxy := os.Getenv("NB_PROXY")
+
+	var dialer proxy.Dialer
+	var err error
+	if nbProxy != "" {
+		dialer, err = proxy.SOCKS5("tcp", nbProxy, nil, &net.Dialer{
+			Timeout:   60 * time.Second,
+			KeepAlive: 30 * time.Second,
+		})
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	switch args[1] {
 	case "-listen":
 		if argc < 3 {
@@ -64,7 +80,7 @@ func main() {
 		// }
 		split := strings.SplitN(remoteAddress, ":", 2)
 		log.Println("[√]", "start to transmit address:", remoteAddress, "to address:", split[0]+":"+port)
-		port2host(port, remoteAddress)
+		port2host(port, remoteAddress, dialer)
 		break
 	case "-slave":
 		if argc < 3 {
@@ -153,17 +169,24 @@ func port2port(port1 string, port2 string) {
 	}
 }
 
-func port2host(allowPort string, targetAddress string) {
+func port2host(allowPort string, targetAddress string, proxyDialer proxy.Dialer) {
 	server := start_server("0.0.0.0:" + allowPort)
 	for {
 		conn := accept(server)
 		if conn == nil {
 			continue
 		}
-		//println(targetAddress)
 		go func(targetAddress string) {
 			log.Println("[+]", "start connect host:["+targetAddress+"]")
-			target, err := net.Dial("tcp", targetAddress)
+
+			var target net.Conn
+
+			var err error
+			if proxyDialer != nil {
+				target, err = proxyDialer.Dial("tcp", targetAddress)
+			} else {
+				target, err = net.Dial("tcp", targetAddress)
+			}
 			if err != nil {
 				// temporarily unavailable, don't use fatal.
 				log.Println("[x]", "connect target address ["+targetAddress+"] faild. retry in ", timeout, "seconds. ")
