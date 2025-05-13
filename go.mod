@@ -1,5 +1,5 @@
-module main
+module github.com/dashjay/NATBypass
 
 go 1.23.1
 
-require golang.org/x/net v0.40.0 // indirect
+require golang.org/x/net v0.40.0
