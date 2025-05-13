@@ -58,10 +58,10 @@ func main() {
 			log.Fatalln(`-tran need two arguments, like "nb -tran 1997 192.168.1.2:3389".`)
 		}
 		port := checkPort(args[2])
-		var remoteAddress string
-		if checkIp(args[3]) {
-			remoteAddress = args[3]
-		}
+		var remoteAddress string = args[3]
+		// if checkIp(args[3]) {
+		// 	remoteAddress = args[3]
+		// }
 		split := strings.SplitN(remoteAddress, ":", 2)
 		log.Println("[√]", "start to transmit address:", remoteAddress, "to address:", split[0]+":"+port)
 		port2host(port, remoteAddress)
