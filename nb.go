@@ -177,14 +177,15 @@ func port2host(allowPort string, targetAddress string, proxyDialer proxy.Dialer)
 			continue
 		}
 		go func(targetAddress string) {
-			log.Println("[+]", "start connect host:["+targetAddress+"]")
 
 			var target net.Conn
 
 			var err error
 			if proxyDialer != nil {
+				log.Println("[+]", "start connect host:["+targetAddress+"] with proxy")
 				target, err = proxyDialer.Dial("tcp", targetAddress)
 			} else {
+				log.Println("[+]", "start connect host:["+targetAddress+"]")
 				target, err = net.Dial("tcp", targetAddress)
 			}
 			if err != nil {
